@@ -19,7 +19,7 @@
 # (the variable k in RUVs function), produces diagnostic plots and performs the second-pass
 # differential expression analysis with adjustment for these covariates. Output is produced
 # corresponding to each iteration in the form of PCA plots, RLE plots, P Value histogram plots,
-# and differential expression tables containing calculated fold changes P Values.
+# and differential expression tables containing calculated fold changes and P Values.
 
 ### load required libraries:
 library(gplots)
