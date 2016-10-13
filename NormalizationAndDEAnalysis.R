@@ -45,6 +45,7 @@ col_205 <- rep("#636363", 7)
 col_08  <- rep("#528881", 4)
 col_29  <- rep("#5e3c58", 3)
 col_51  <- rep("#886451", 7)
+col_164 <- rep("#2a334f", 8)
 
 ### read count data and sample sheet:
 countData_allSamples  <- read.table("countData_allSamples.txt", sep = "\t")
@@ -53,14 +54,15 @@ sampleData_allSamples <- read.table("sampleData_allSamples.txt", sep = "\t")
 ### The lines below specify differential comparison to be made. The variable
 ### "which_comparison" serves as a switch between 4 differential comparisons.
 ### The following values are to be assigned to "which_comparison":
-### 1 : pooled SCZ lines vs. pooled CTR lines
-### 2 : SCZ line 8 vs. pooled CTR lines
-### 3 : SCZ line 29 vs. pooled CTR lines
-### 4 : SCZ line 51 vs. pooled CTR lines
+### 1 : 4 pooled SCZ lines vs. 3 pooled CTR lines
+### 2 : SCZ line 8 vs. 3 pooled CTR lines
+### 3 : SCZ line 29 vs. 3 pooled CTR lines
+### 4 : SCZ line 51 vs. 3 pooled CTR lines
+### 5 : SCS line 164 vs. 3 pooled CTR lines
 
-which_comparison <- 1 ### accepts the following valuesL 1, 2, 3, or 4
+which_comparison <- 5 ### accepts values between 1 and 5
 
-if (which_comparison == 1) { ### 1 : pooled SCZ lines vs. pooled CTR lines
+if (which_comparison == 1) { ### 1 : 4 pooled SCZ lines vs. 3 pooled CTR lines
   
   ### suffix is used in filenames to distinguish output for different comparisons:
   suffix <- " - SCZ vs CTR"
@@ -72,15 +74,15 @@ if (which_comparison == 1) { ### 1 : pooled SCZ lines vs. pooled CTR lines
   sampleData <- sampleData_allSamples
   
   ### combined vector of colors to be used in plots and figures:
-  cell_line_colors <- c(col_22, col_37, col_205, col_08, col_29, col_51)
+  cell_line_colors <- c(col_22, col_37, col_205, col_08, col_29, col_51, col_164)
   
   ### factors for edgeR differential expression analysis (1 = CTR, 2 = SCZ):
-  x <- factor(c(rep(1, 14), rep(2, 14)))
+  x <- factor(c(rep(1, 14), rep(2, 22)))
   
   ### groups for RUVg function of RUVSeq package for normalization (first vector is CTR, second in SCZ):
-  groups <- rbind(c(1:14), c(15:28))
+  groups <- rbind(c(1:14), c(15:36))
   
-} else if (which_comparison == 2) { ### 2 : SCZ line 8 vs. pooled CTR lines
+} else if (which_comparison == 2) { ### 2 : SCZ line 8 vs. 3 pooled CTR lines
   
   suffix <- " - SCZ.8 vs CTR"
   countData <- countData_allSamples[,c(c(1:14), c(15:18))]
@@ -89,7 +91,7 @@ if (which_comparison == 1) { ### 1 : pooled SCZ lines vs. pooled CTR lines
   x <- factor(c(rep(1, 14), rep(2, 4)))
   groups <- rbind(c(1:14), c(15:18, rep(-1, 10)))
   
-} else if (which_comparison == 3) { ### 3 : SCZ line 29 vs. pooled CTR lines
+} else if (which_comparison == 3) { ### 3 : SCZ line 29 vs. 3 pooled CTR lines
   
   suffix <- " - SCZ.29 vs CTR"
   countData <- countData_allSamples[,c(c(1:14), c(19:21))]
@@ -98,7 +100,7 @@ if (which_comparison == 1) { ### 1 : pooled SCZ lines vs. pooled CTR lines
   x <- factor(c(rep(1, 14), rep(2, 3)))
   groups <- rbind(c(1:14), c(15:17, rep(-1, 11)))
   
-} else if (which_comparison == 4) { ### 4 : SCZ line 51 vs. pooled CTR lines
+} else if (which_comparison == 4) { ### 4 : SCZ line 51 vs. 3 pooled CTR lines
   
   suffix <- " - SCZ.51 vs CTR"
   countData <- countData_allSamples[,c(c(1:14), c(22:28))]
@@ -107,6 +109,15 @@ if (which_comparison == 1) { ### 1 : pooled SCZ lines vs. pooled CTR lines
   x <- factor(c(rep(1, 14), rep(2, 7)))
   groups <- rbind(c(1:14), c(15:21, rep(-1, 7)))
   
+} else if (which_comparison == 5) { ### 5 : SCZ line 164 vs.3 pooled CTR lines
+  
+  suffix <- " - SCZ.164 vs CTR"
+  countData <- countData_allSamples[,c(c(1:14), c(29:36))]
+  sampleData <- sampleData_allSamples[c(c(1:14), c(29:36)),]
+  cell_line_colors <- c(col_22, col_37, col_205, col_164)
+  x <- factor(c(rep(1, 14), rep(2, 8)))
+  groups <- rbind(c(1:14), c(15:22, rep(-1, 6))) 
+
 } else {
   
   print("Please provide a legal value for which_comparison to make :/")
@@ -227,13 +238,13 @@ graphics.off()
 
 ### edgeR single factor: ~ condition (~ x)
 design <- model.matrix(~ x, data = sampleData)
-y <- DGEList(counts = countData, group = x)
+y <- DGEList(counts = uq, group = x)
 y <- calcNormFactors(y)
 y <- estimateGLMCommonDisp(y, design)
 y <- estimateGLMTagwiseDisp(y, design)
 fit <- glmFit(y, design)
 lrt <- glmLRT(fit)
-all_tags <- topTags(lrt, n = nrow(countData))
+all_tags <- topTags(lrt, n = nrow(uq))
 all_tags <- all_tags$table
 all_tags <- all_tags[order(all_tags$FDR),]
 
@@ -346,6 +357,9 @@ for (i in 1:ncol(uq)) {
   plotRLE(s$normalizedCounts, outline = FALSE, ylim = c(-2, 2.5), col = cell_line_colors, las = 2, ylab = "Relative Log Expression")
   graphics.off()
   
+  ### write out RUVs-normalized matrix:
+  write.table(s$normalizedCounts, paste(output_matrices, "countData - UQ_RUVs_", i, suffix, ".txt", sep = ""), sep = "\t", quote = FALSE)
+  
   ##########################################################################################################################
   ### STEP 3: SECOND PASS DIFFERENTIAL EXPRESSION ##########################################################################
   ##########################################################################################################################
@@ -401,13 +415,13 @@ for (i in 1:ncol(uq)) {
     
     ### edgeR single factor: ~ condition (~ x) + W_k
     design <- model.matrix(formula(paste("~ x +", form_string, sep = "")), data = sampleDataW)
-    y <- DGEList(counts = countData, group = x)
+    y <- DGEList(counts = uq, group = x)
     y <- calcNormFactors(y)
     y <- estimateGLMCommonDisp(y, design)
     y <- estimateGLMTagwiseDisp(y, design)
     fit <- glmFit(y, design)
     lrt <- glmLRT(fit, coef = 2)
-    all_tags <- topTags(lrt, n = nrow(countData))
+    all_tags <- topTags(lrt, n = nrow(uq))
     all_tags <- all_tags$table
     all_tags <- all_tags[order(all_tags$FDR),]
     
