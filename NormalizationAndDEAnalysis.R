@@ -60,7 +60,7 @@ sampleData_allSamples <- read.table("sampleData_allSamples.txt", sep = "\t")
 ### 4 : SCZ line 51 vs. 3 pooled CTR lines
 ### 5 : SCS line 164 vs. 3 pooled CTR lines
 
-which_comparison <- 5 ### accepts values between 1 and 5
+which_comparison <- 1 ### accepts values between 1 and 5
 
 if (which_comparison == 1) { ### 1 : 4 pooled SCZ lines vs. 3 pooled CTR lines
   
@@ -80,7 +80,7 @@ if (which_comparison == 1) { ### 1 : 4 pooled SCZ lines vs. 3 pooled CTR lines
   x <- factor(c(rep(1, 14), rep(2, 22)))
   
   ### groups for RUVg function of RUVSeq package for normalization (first vector is CTR, second in SCZ):
-  groups <- rbind(c(1:14), c(15:36))
+  groups <- rbind(c(1:14, rep(-1, 8)), c(15:36))
   
 } else if (which_comparison == 2) { ### 2 : SCZ line 8 vs. 3 pooled CTR lines
   
