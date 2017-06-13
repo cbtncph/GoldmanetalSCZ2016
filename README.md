@@ -1,2 +1,2 @@
-# GoldmanetalSCZ2016
-R code and data for Goldman et al. 2016 RNA-Seq analysis of schizophrenic OPCs
+# Winderm et al. Cell 2017
+R code and data for Windrem et al. 2017 RNA-seq analysis of schizophrenic OPCs
